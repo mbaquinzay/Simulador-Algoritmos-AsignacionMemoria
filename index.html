@@ -15,23 +15,10 @@ body { font-family: Arial; background:#f4f6f8; padding:20px; }
     margin-bottom:20px;
 }
 
-.header img {
-    width:120px;
-}
+.header img { width:120px; }
 
-.header-text {
-    line-height:1.3;
-}
-
-.header-text h2 {
-    margin:0;
-    color:#2c3e50;
-}
-
-.header-text p {
-    margin:2px 0;
-    font-size:14px;
-}
+.header-text h2 { margin:0; color:#2c3e50; }
+.header-text p { margin:2px 0; font-size:14px; }
 
 /* BOX */
 .box {
@@ -41,7 +28,15 @@ body { font-family: Arial; background:#f4f6f8; padding:20px; }
     margin-top:10px;
 }
 
-input, select, button {
+/* 🔥 INPUTS MÁS GRANDES */
+input {
+    padding:8px;
+    margin:5px;
+    width:90%;
+    max-width:600px;
+}
+
+select, button {
     padding:8px;
     margin:5px;
 }
@@ -90,9 +85,8 @@ input, select, button {
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
-    <img src="Logo_unca.png" alt="UNCA">
+    <img src="Logo_unca.png">
     <div class="header-text">
         <h2>Cátedra Sistemas Operativos</h2>
         <p>Facultad de Tecnología y Ciencias Aplicadas</p>
@@ -104,10 +98,10 @@ input, select, button {
 
 <div class="box">
 
-<label>Bloques (ej: 100,500,200,300):</label><br>
+<label>Bloques:</label><br>
 <input type="text" id="bloques"><br>
 
-<label>Procesos (ej: A:100,B:50,C:200):</label><br>
+<label>Procesos (A:100,B:50):</label><br>
 <input type="text" id="procesos"><br>
 
 <label>Algoritmo:</label><br>
@@ -159,8 +153,9 @@ function simular() {
 
     let libres = [...bloques];
     let asignaciones = new Array(bloques.length).fill(null);
-    let pos = 0;
+    let usado = new Array(bloques.length).fill(false);
 
+    let pos = 0;
     let resultado = "";
 
     procesos.forEach(p => {
@@ -169,13 +164,13 @@ function simular() {
 
         if (algoritmo === "first") {
             for (let i=0;i<libres.length;i++)
-                if (libres[i] >= p.tam) { idx = i; break; }
+                if (!usado[i] && libres[i] >= p.tam) { idx = i; break; }
         }
 
         if (algoritmo === "best") {
             let best = -1;
             for (let i=0;i<libres.length;i++)
-                if (libres[i] >= p.tam)
+                if (!usado[i] && libres[i] >= p.tam)
                     if (best === -1 || libres[i] < libres[best]) best = i;
             idx = best;
         }
@@ -183,7 +178,7 @@ function simular() {
         if (algoritmo === "worst") {
             let worst = -1;
             for (let i=0;i<libres.length;i++)
-                if (libres[i] >= p.tam)
+                if (!usado[i] && libres[i] >= p.tam)
                     if (worst === -1 || libres[i] > libres[worst]) worst = i;
             idx = worst;
         }
@@ -191,7 +186,7 @@ function simular() {
         if (algoritmo === "next") {
             let count = 0;
             while (count < libres.length) {
-                if (libres[pos] >= p.tam) { idx = pos; break; }
+                if (!usado[pos] && libres[pos] >= p.tam) { idx = pos; break; }
                 pos = (pos + 1) % libres.length;
                 count++;
             }
@@ -199,16 +194,17 @@ function simular() {
 
         if (idx !== -1) {
             asignaciones[idx] = p;
+            usado[idx] = true;
             libres[idx] -= p.tam;
-            resultado += `Proceso ${p.nombre} (${p.tam}) → Bloque ${idx}<br>`;
+
+            resultado += `✔ Proceso ${p.nombre} (${p.tam}) → Bloque ${idx}<br>`;
         } else {
-            resultado += `Proceso ${p.nombre} → NO asignado<br>`;
+            resultado += `❌ Proceso ${p.nombre} (${p.tam}) → No se puede ejecutar: no existe un bloque libre adecuado<br>`;
         }
     });
 
-    let FE = libres.reduce((a,b)=>a+b,0);
-
-    resultado += `<br><b>Fragmentación Externa (FE):</b> ${FE}`;
+    let memoriaLibre = libres.reduce((a,b)=>a+b,0);
+    resultado += `<br><b>Memoria libre total:</b> ${memoriaLibre}`;
 
     document.getElementById("salida").innerHTML = resultado;
 
@@ -242,16 +238,13 @@ function simular() {
                 fDiv.className = "fragmento";
                 fDiv.style.flex = fi;
                 fDiv.innerHTML = "FI " + fi;
-
                 seg.appendChild(fDiv);
             }
 
         } else {
-
             let libreDiv = document.createElement("div");
             libreDiv.className = "libre";
             libreDiv.innerHTML = "Libre ("+tam+")";
-
             seg.appendChild(libreDiv);
         }
 
@@ -274,12 +267,11 @@ function resetear() {
 }
 
 function ejemplo() {
-    document.getElementById("bloques").value = "100,500,200,300";
-    document.getElementById("procesos").value = "A:100,B:50,C:200,D:250";
+    document.getElementById("bloques").value = "600,100,50,150,300,60";
+    document.getElementById("procesos").value = "AUTH:200,DB:135,CACHE:30,API:170";
 }
 
 </script>
 
-    
 </body>
 </html>
